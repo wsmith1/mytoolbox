@@ -1,13 +1,11 @@
-#ifndef __LINUX_COMPILER_H
-#error "Please don't include <linux/compiler-gcc4.h> directly, include <linux/compiler.h> instead."
-#endif
+#ifndef __MYTOOLBOX_COMPILER_H
+#error "Please don't include 'mytoolbox/compiler-gcc4.h' directly, include 'mytoolbox/compiler.h' instead."
+#endif /* __MYTOOLBOX_COMPILER_H */
 
 /* GCC 4.1.[01] miscompiles __weak */
-#ifdef __KERNEL__
 # if __GNUC_MINOR__ == 1 && __GNUC_PATCHLEVEL__ <= 1
 #  error Your version of gcc miscompiles the __weak directive
 # endif
-#endif
 
 #define __used			__attribute__((__used__))
 #define __must_check 		__attribute__((warn_unused_result))
@@ -46,13 +44,13 @@
 /* Mark a function definition as prohibited from being cloned. */
 #define __noclone	__attribute__((__noclone__))
 
-#endif
-#endif
+#endif /* __GNUC_MINOR__ >= 5 */
+#endif /* __GNUC_MINOR__ >= 3 */
 
 #if __GNUC_MINOR__ > 0
 #define __compiletime_object_size(obj) __builtin_object_size(obj, 0)
-#endif
-#if __GNUC_MINOR__ >= 4 && !defined(__CHECKER__)
+#endif /* __GNUC_MINOR__ > 0 */
+#if __GNUC_MINOR__ >= 4
 #define __compiletime_warning(message) __attribute__((warning(message)))
 #define __compiletime_error(message) __attribute__((error(message)))
-#endif
+#endif /* __GNUC_MINOR__ >= 4 */

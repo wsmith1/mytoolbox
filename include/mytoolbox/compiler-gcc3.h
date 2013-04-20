@@ -1,6 +1,6 @@
-#ifndef __LINUX_COMPILER_H
-#error "Please don't include <linux/compiler-gcc3.h> directly, include <linux/compiler.h> instead."
-#endif
+#ifndef __MYTOOLBOX_COMPILER_H
+#error "Please don't include 'mytoolbox/compiler-gcc3.h' directly, include 'mytoolbox/compiler.h' instead."
+#endif /* __MYTOOLBOX_COMPILER_H */
 
 #if __GNUC_MINOR__ < 2
 # error Sorry, your compiler is too old - please upgrade it.
@@ -16,8 +16,3 @@
 #define __must_check		__attribute__((warn_unused_result))
 #endif
 
-#ifdef CONFIG_GCOV_KERNEL
-# if __GNUC_MINOR__ < 4
-#   error "GCOV profiling support for gcc versions below 3.4 not included"
-# endif /* __GNUC_MINOR__ */
-#endif /* CONFIG_GCOV_KERNEL */
