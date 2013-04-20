@@ -1,7 +1,11 @@
-#include <linux/module.h>
-#include <linux/rbtree_augmented.h>
-#include <linux/random.h>
-#include <asm/timex.h>
+#include <stdio.h>
+#include <inttypes.h>
+#include <errno.h>
+#include "mytoolbox/bug-warn.h"
+#include "mytoolbox/cpu_cycles.h"
+#include "mytoolbox/random.h"
+#include "mytoolbox/rbtree.h"
+#include "mytoolbox/rbtree_test.h"
 
 #define NODES       100
 #define PERF_LOOPS  100000
@@ -9,29 +13,33 @@
 
 struct test_node {
 	struct rb_node rb;
-	u32 key;
+	uint32_t key;
 
 	/* following fields used for testing augmented rbtree functionality */
-	u32 val;
-	u32 augmented;
+	uint32_t val;
+	uint32_t augmented;
 };
-
-static struct rb_root root = RB_ROOT;
-static struct test_node nodes[NODES];
-
-static struct rnd_state rnd;
 
 static void insert(struct test_node *node, struct rb_root *root)
 {
 	struct rb_node **new = &root->rb_node, *parent = NULL;
-	u32 key = node->key;
+	uint32_t key = node->key;
 
 	while (*new) {
+		uint32_t parent_key;
 		parent = *new;
-		if (key < rb_entry(parent, struct test_node, rb)->key)
+		parent_key = rb_entry(parent, struct test_node, rb)->key;
+		if (key < parent_key) {
 			new = &parent->rb_left;
-		else
+		}
+		else if (key > parent_key) {
 			new = &parent->rb_right;
+		}
+		else {
+			/* have to do it for now, FIXME later */
+			new = &parent->rb_right;
+			WARN_ONCE(1, "duplicate key %lu\n", (unsigned long)key);
+		}
 	}
 
 	rb_link_node(&node->rb, parent, new);
@@ -43,9 +51,9 @@ static inline void erase(struct test_node *node, struct rb_root *root)
 	rb_erase(&node->rb, root);
 }
 
-static inline u32 augment_recompute(struct test_node *node)
+static inline uint32_t augment_recompute(struct test_node *node)
 {
-	u32 max = node->val, child_augmented;
+	uint32_t max = node->val, child_augmented;
 	if (node->rb.rb_left) {
 		child_augmented = rb_entry(node->rb.rb_left, struct test_node,
 					   rb)->augmented;
@@ -61,14 +69,18 @@ static inline u32 augment_recompute(struct test_node *node)
 	return max;
 }
 
-RB_DECLARE_CALLBACKS(static, augment_callbacks, struct test_node, rb,
-		     u32, augmented, augment_recompute)
+static void augment_callback(struct rb_node *node, void *data)
+{
+	struct test_node *node1 = rb_entry(node, struct test_node, rb);
+	uninitialized_var(data);
+	node1->augmented = augment_recompute(node1);
+}
 
 static void insert_augmented(struct test_node *node, struct rb_root *root)
 {
 	struct rb_node **new = &root->rb_node, *rb_parent = NULL;
-	u32 key = node->key;
-	u32 val = node->val;
+	uint32_t key = node->key;
+	uint32_t val = node->val;
 	struct test_node *parent;
 
 	while (*new) {
@@ -76,34 +88,50 @@ static void insert_augmented(struct test_node *node, struct rb_root *root)
 		parent = rb_entry(rb_parent, struct test_node, rb);
 		if (parent->augmented < val)
 			parent->augmented = val;
-		if (key < parent->key)
+		if (key < parent->key) {
 			new = &parent->rb.rb_left;
-		else
+		}
+		else if (key > parent->key) {
 			new = &parent->rb.rb_right;
+		}
+		else {
+			new = &parent->rb.rb_right;
+			WARN_ONCE(1, "duplicate key %lu\n", (unsigned long)key);
+		}
 	}
 
 	node->augmented = val;
 	rb_link_node(&node->rb, rb_parent, new);
-	rb_insert_augmented(&node->rb, root, &augment_callbacks);
+	rb_insert_color(&node->rb, root);
+	rb_augment_insert(&node->rb, augment_callback, NULL);
 }
 
 static void erase_augmented(struct test_node *node, struct rb_root *root)
 {
-	rb_erase_augmented(&node->rb, root, &augment_callbacks);
+	struct rb_node *deepest;
+	deepest = rb_augment_erase_begin(&node->rb);
+	rb_erase(&node->rb, root);
+	rb_augment_erase_end(deepest, augment_callback, NULL);
 }
+
+static struct rb_root root = RB_ROOT;
+static struct test_node nodes[NODES];
+
+static struct rnd_state rnd;
+
 
 static void init(void)
 {
 	int i;
 	for (i = 0; i < NODES; i++) {
-		nodes[i].key = prandom_u32_state(&rnd);
-		nodes[i].val = prandom_u32_state(&rnd);
+		nodes[i].key = prandom32_s(&rnd);
+		nodes[i].val = prandom32_s(&rnd);
 	}
 }
 
-static bool is_red(struct rb_node *rb)
+static int is_red(struct rb_node *rb)
 {
-	return !(rb->__rb_parent_color & 1);
+	return !(rb->rb_parent_color & 1);
 }
 
 static int black_path_count(struct rb_node *rb)
@@ -119,7 +147,7 @@ static void check(int nr_nodes)
 	struct rb_node *rb;
 	int count = 0;
 	int blacks = 0;
-	u32 prev_key = 0;
+	uint32_t prev_key = 0;
 
 	for (rb = rb_first(&root); rb; rb = rb_next(rb)) {
 		struct test_node *node = rb_entry(rb, struct test_node, rb);
@@ -148,17 +176,20 @@ static void check_augmented(int nr_nodes)
 	}
 }
 
-static int rbtree_test_init(void)
+int rbtree_test(void)
 {
 	int i, j;
-	cycles_t time1, time2, time;
+	uint64_t time1, time2, time;
 
-	printk(KERN_ALERT "rbtree testing");
+	fprintf(stderr, "rbtree testing");
 
-	prandom_seed_state(&rnd, 3141592653589793238ULL);
+	random32_init_s(&rnd, 3141592653UL);
+	time1 = get_cpu_cycles_64();
+	srandom32_s(&rnd, (uint32_t)time1);
+
 	init();
 
-	time1 = get_cycles();
+	time1 = get_cpu_cycles_64();
 
 	for (i = 0; i < PERF_LOOPS; i++) {
 		for (j = 0; j < NODES; j++)
@@ -167,11 +198,11 @@ static int rbtree_test_init(void)
 			erase(nodes + j, &root);
 	}
 
-	time2 = get_cycles();
+	time2 = get_cpu_cycles_64();
 	time = time2 - time1;
 
-	time = div_u64(time, PERF_LOOPS);
-	printk(" -> %llu cycles\n", (unsigned long long)time);
+	time = (time / PERF_LOOPS);
+	fprintf(stderr, " -> %llu cycles\n", (unsigned long long)time);
 
 	for (i = 0; i < CHECK_LOOPS; i++) {
 		init();
@@ -186,11 +217,11 @@ static int rbtree_test_init(void)
 		check(0);
 	}
 
-	printk(KERN_ALERT "augmented rbtree testing");
+	fprintf(stderr, "augmented rbtree testing");
 
 	init();
 
-	time1 = get_cycles();
+	time1 = get_cpu_cycles_64();
 
 	for (i = 0; i < PERF_LOOPS; i++) {
 		for (j = 0; j < NODES; j++)
@@ -199,11 +230,11 @@ static int rbtree_test_init(void)
 			erase_augmented(nodes + j, &root);
 	}
 
-	time2 = get_cycles();
+	time2 = get_cpu_cycles_64();
 	time = time2 - time1;
 
-	time = div_u64(time, PERF_LOOPS);
-	printk(" -> %llu cycles\n", (unsigned long long)time);
+	time = (time / PERF_LOOPS);
+	fprintf(stderr, " -> %llu cycles\n", (unsigned long long)time);
 
 	for (i = 0; i < CHECK_LOOPS; i++) {
 		init();
@@ -221,14 +252,3 @@ static int rbtree_test_init(void)
 	return -EAGAIN; /* Fail will directly unload the module */
 }
 
-static void rbtree_test_exit(void)
-{
-	printk(KERN_ALERT "test exit\n");
-}
-
-module_init(rbtree_test_init)
-module_exit(rbtree_test_exit)
-
-MODULE_LICENSE("GPL");
-MODULE_AUTHOR("Michel Lespinasse");
-MODULE_DESCRIPTION("Red Black Tree test");
