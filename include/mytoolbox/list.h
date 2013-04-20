@@ -1,10 +1,11 @@
-#ifndef _LINUX_LIST_H
-#define _LINUX_LIST_H
+#ifndef _MYTOOLBOX_LIST_H
+#define _MYTOOLBOX_LIST_H
 
-#include <linux/types.h>
-#include <linux/stddef.h>
-#include <linux/poison.h>
-#include <linux/const.h>
+#define __need_NULL
+#include <stddef.h>
+#include "mytoolbox/types-mytoolbox.h"
+#include "mytoolbox/macros.h"
+#include "mytoolbox/poison.h"
 
 /*
  * Simple doubly linked list implementation.
@@ -342,6 +343,16 @@ static inline void list_splice_tail_init(struct list_head *list,
 }
 
 /**
+ * list_entry_qual - get the struct for this entry
+ * @ptr:	the &struct list_head pointer.
+ * @type:	the type of the struct this is embedded in.
+ * @member:	the name of the list_struct within the struct.
+ * @qual:	qualifier of ptr and the result value.
+ */
+#define list_entry_qual(ptr, type, member, qual) \
+	container_of_qual(ptr, type, member, qual)
+
+/**
  * list_entry - get the struct for this entry
  * @ptr:	the &struct list_head pointer.
  * @type:	the type of the struct this is embedded in.
@@ -419,6 +430,18 @@ static inline void list_splice_tail_init(struct list_head *list,
 	for (pos = list_entry((head)->next, typeof(*pos), member);	\
 	     &pos->member != (head); 	\
 	     pos = list_entry(pos->member.next, typeof(*pos), member))
+
+/**
+ * list_for_each_entry_qual	-	iterate over list of given type
+ * @pos:	the type * to use as a loop cursor.
+ * @head:	the head for your list.
+ * @member:	the name of the list_struct within the struct.
+ * @qual:	the qualifier of pos and head.
+ */
+#define list_for_each_entry_qual(pos, head, member, qual)				\
+	for (pos = list_entry_qual((head)->next, typeof(*pos), member, qual);	\
+	     &pos->member != (head); 	\
+	     pos = list_entry_qual(pos->member.next, typeof(*pos), member, qual))
 
 /**
  * list_for_each_entry_reverse - iterate backwards over list of given type.
@@ -659,6 +682,8 @@ static inline void hlist_move_list(struct hlist_head *old,
 
 #define hlist_entry(ptr, type, member) container_of(ptr,type,member)
 
+#define hlist_entry_qual(ptr, type, member, qual) container_of_qual(ptr,type,member, qual)
+
 #define hlist_for_each(pos, head) \
 	for (pos = (head)->first; pos ; pos = pos->next)
 
@@ -716,4 +741,5 @@ static inline void hlist_move_list(struct hlist_head *old,
 		({ tpos = hlist_entry(pos, typeof(*tpos), member); 1;}); \
 	     pos = n)
 
-#endif
+#endif /* _MYTOOLBOX_LIST_H */
+
