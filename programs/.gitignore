@@ -16,3 +16,8 @@
 *.out
 *.app
 
+/test/test_cpu_cycles
+/test/test_list_sort
+/test/test_random
+/test/test_rbtree
+
