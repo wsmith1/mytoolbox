@@ -1,24 +1,22 @@
-#ifndef _LINUX_STDDEF_H
-#define _LINUX_STDDEF_H
+#ifndef _MYTOOLBOX_STDDEF_MYTOOLBOX_H
+#define _MYTOOLBOX_STDDEF_MYTOOLBOX_H
 
-#include <linux/compiler.h>
-
-#ifdef __KERNEL__
-
-#undef NULL
-#define NULL ((void *)0)
+/* For offsetof() macro definition */
+#include <stddef.h>
+/* For __compiler_offsetof() macro definition */
+#include "mytoolbox/compiler.h"
 
 enum {
 	false	= 0,
 	true	= 1
 };
 
-#undef offsetof
+#ifndef offsetof
 #ifdef __compiler_offsetof
 #define offsetof(TYPE,MEMBER) __compiler_offsetof(TYPE,MEMBER)
-#else
+#else /* !__compiler_offsetof */
 #define offsetof(TYPE, MEMBER) ((size_t) &((TYPE *)0)->MEMBER)
-#endif
-#endif /* __KERNEL__ */
+#endif /* !__compiler_offsetof */
+#endif /* offsetof */
 
-#endif
+#endif /* _MYTOOLBOX_STDDEF_MYTOOLBOX_H */
