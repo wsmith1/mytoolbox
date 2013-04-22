@@ -24,7 +24,11 @@
 #include "mytoolbox/compiler-gcc.h"
 #endif
 
+#ifdef __cplusplus
+#define notrace /* no_instrument_function not valid for C++ */
+#else /* __cplusplus */
 #define notrace __attribute__((no_instrument_function))
+#endif /* __cplusplus */
 
 /* Intel compiler defines __GNUC__. So we will overwrite implementations
  * coming from above header files here
