@@ -9,8 +9,13 @@
    result (of value 0 and type size_t), so the expression can be used
    e.g. in a structure initializer (or where-ever else comma expressions
    aren't permitted). */
+#ifdef __cplusplus
+#define BUILD_BUG_ON_ZERO(e) (sizeof(char[1 - 2*!!(e)]) - 1)
+#define BUILD_BUG_ON_NULL(e) ((void *)(sizeof(char[1 - 2*!!(e)]) - 1))
+#else /* __cplusplus */
 #define BUILD_BUG_ON_ZERO(e) (sizeof(struct { int:-!!(e); }))
 #define BUILD_BUG_ON_NULL(e) ((void *)sizeof(struct { int:-!!(e); }))
+#endif /* __cplusplus */
 
 /**
  * BUILD_BUG_ON - break compile if a condition is true.
