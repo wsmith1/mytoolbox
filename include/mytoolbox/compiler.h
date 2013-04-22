@@ -157,9 +157,11 @@
 # define __section(S) __attribute__ ((__section__(#S)))
 #endif
 
+#include "mytoolbox/compiler-types-compat.h"
+
 /* Are two types/vars the same type (ignoring qualifiers)? */
 #ifndef __same_type
-# define __same_type(a, b) __builtin_types_compatible_p(typeof(a), typeof(b))
+# define __same_type(a, b) __types_compatible_p(typeof(a), typeof(b))
 #endif
 
 /* Compile time object size, -1 for unknown */
