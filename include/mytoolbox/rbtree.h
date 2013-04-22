@@ -130,7 +130,11 @@ static inline void rb_set_color(struct rb_node *rb, int color)
 	rb->rb_parent_color = (rb->rb_parent_color & ~1UL) | (unsigned long)color;
 }
 
+#ifdef __cplusplus
+#define RB_ROOT	(struct rb_root) { rb_node: NULL }
+#else /* __cplusplus */
 #define RB_ROOT	(struct rb_root) { .rb_node = NULL }
+#endif /* __cplusplus */
 #define	rb_entry(ptr, type, member) container_of(ptr, type, member)
 #define	rb_entry_qual(ptr, type, member, qual) container_of_qual(ptr, type, member, qual)
 
