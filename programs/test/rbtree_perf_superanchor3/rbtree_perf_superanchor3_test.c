@@ -6,13 +6,8 @@
 #include "mytoolbox/random.h"
 #include "rbtree_perf_superanchor3.h"
 
-struct tree_key_s {
-	long k1;
-	long k2;
-};
-
 struct tree_data_s {
-	struct tree_key_s key;
+	struct rb_node_super_ll rb1;
 	char unused1[64];
 	long value;
 };
@@ -22,20 +17,19 @@ struct tree_data_s {
 /* Number of nodes over which to collect statistics */
 #define NODE_STAT_COUNT 100000
 
-static int rbtree_perf_compar(long k1, long k2, const void *data)
+static int rbtree_perf_compar(long k1, long k2, const struct rb_node_super_ll *node_super_ll)
 {
-	const struct tree_data_s *const da = data;
-	if (k1 < da->key.k1) {
+	if (k1 < node_super_ll->k1) {
 		return -1;
 	}
-	else if (k1 > da->key.k1) {
+	else if (k1 > node_super_ll->k1) {
 		return 1;
 	}
 	else {
-		if (k2 < da->key.k2) {
+		if (k2 < node_super_ll->k2) {
 			return -1;
 		}
-		else if (k2 > da->key.k2) {
+		else if (k2 > node_super_ll->k2) {
 			return 1;
 		}
 		else {
@@ -48,7 +42,6 @@ static int rbtree_perf_superanchor3_test(void)
 {
 	struct rnd_state rnd;
 	struct tree_data_s *datanodes;
-	struct tree_key_s datanode_key;
 	struct rb_root tree_root = RB_ROOT;
 	int i;
 	int total_insert_count = 0;
@@ -66,28 +59,26 @@ static int rbtree_perf_superanchor3_test(void)
 	for (i = 0; i < NODE_COUNT; i++) {
 		uint32_t v;
 		v = prandom32_s(&rnd);
-		datanodes[i].key.k1 = (long)v;
+		datanodes[i].rb1.k1 = (long)v;
 		v = prandom32_s(&rnd);
-		datanodes[i].key.k2 = (long)v;
+		datanodes[i].rb1.k2 = (long)v;
 		v = prandom32_s(&rnd);
 		datanodes[i].value = (long)v;
 	}
 
 	for (i = 0; i < NODE_COUNT-NODE_STAT_COUNT; i++) {
 		int ret;
-		datanode_key = datanodes[i].key;
 
-		ret = tree_perf_insert(&tree_root, datanode_key.k1, datanode_key.k2,
-			&datanodes[i], rbtree_perf_compar);
+		ret = tree_perf_insert(&tree_root,
+			&datanodes[i].rb1, rbtree_perf_compar);
 		total_insert_count += ret;
 	}
 	tree_perf_ticks_enable = 1;
 	for (i = NODE_COUNT-NODE_STAT_COUNT; i < NODE_COUNT; i++) {
 		int ret;
-		datanode_key = datanodes[i].key;
 
-		ret = tree_perf_insert(&tree_root, datanode_key.k1, datanode_key.k2,
-			&datanodes[i], rbtree_perf_compar);
+		ret = tree_perf_insert(&tree_root,
+			&datanodes[i].rb1, rbtree_perf_compar);
 		total_insert_count += ret;
 	}
 	tree_perf_ticks_enable = 0;
@@ -98,22 +89,26 @@ static int rbtree_perf_superanchor3_test(void)
 		tree_perf_insert_count);
 
 	for (i = 0; i < NODE_COUNT-NODE_STAT_COUNT; i++) {
+		const struct rb_node_super_ll *datanode_found_node;
 		const struct tree_data_s *datanode_found;
-		datanode_key = datanodes[i].key;
 
-		datanode_found = tree_perf_find_at(&tree_root, datanode_key.k1, datanode_key.k2,
+		datanode_found_node = tree_perf_find_at(&tree_root, datanodes[i].rb1.k1, datanodes[i].rb1.k2,
 			rbtree_perf_compar);
+		datanode_found = (datanode_found_node ? container_of_qual(datanode_found_node, struct tree_data_s, rb1, const) : NULL);
+
 		if (datanode_found == &datanodes[i]) {
 			total_find_count++;
 		}
 	}
 	tree_perf_ticks_enable = 1;
 	for (i = NODE_COUNT-NODE_STAT_COUNT; i < NODE_COUNT; i++) {
+		const struct rb_node_super_ll *datanode_found_node;
 		const struct tree_data_s *datanode_found;
-		datanode_key = datanodes[i].key;
 
-		datanode_found = tree_perf_find_at(&tree_root, datanode_key.k1, datanode_key.k2,
+		datanode_found_node = tree_perf_find_at(&tree_root, datanodes[i].rb1.k1, datanodes[i].rb1.k2,
 			rbtree_perf_compar);
+		datanode_found = (datanode_found_node ? container_of_qual(datanode_found_node, struct tree_data_s, rb1, const) : NULL);
+
 		if (datanode_found == &datanodes[i]) {
 			total_find_count++;
 		}
@@ -127,10 +122,13 @@ static int rbtree_perf_superanchor3_test(void)
 
 	tree_perf_ticks_enable = 1;
 	for (i = 0; i < NODE_STAT_COUNT; i++) {
-		datanode_key = datanodes[i].key;
+		struct rb_node_super_ll *datanode_found_node;
+		struct tree_data_s *datanode_found;
 
-		struct tree_data_s *datanode_found = tree_perf_remove_at(&tree_root, datanode_key.k1, datanode_key.k2,
+		datanode_found_node = tree_perf_remove_at(&tree_root, datanodes[i].rb1.k1, datanodes[i].rb1.k2,
 			rbtree_perf_compar);
+		datanode_found = (datanode_found_node ? container_of(datanode_found_node, struct tree_data_s, rb1) : NULL);
+
 		if (datanode_found == &datanodes[i]) {
 			total_remove_count++;
 		}
@@ -138,10 +136,13 @@ static int rbtree_perf_superanchor3_test(void)
 	tree_perf_ticks_enable = 0;
 
 	for (i = NODE_STAT_COUNT; i < NODE_COUNT; i++) {
-		datanode_key = datanodes[i].key;
+		struct rb_node_super_ll *datanode_found_node;
+		struct tree_data_s *datanode_found;
 
-		struct tree_data_s *datanode_found = tree_perf_remove_at(&tree_root, datanode_key.k1, datanode_key.k2,
+		datanode_found_node = tree_perf_remove_at(&tree_root, datanodes[i].rb1.k1, datanodes[i].rb1.k2,
 			rbtree_perf_compar);
+		datanode_found = (datanode_found_node ? container_of(datanode_found_node, struct tree_data_s, rb1) : NULL);
+
 		if (datanode_found == &datanodes[i]) {
 			total_remove_count++;
 		}
