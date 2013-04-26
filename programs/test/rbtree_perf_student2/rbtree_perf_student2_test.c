@@ -13,7 +13,7 @@ struct tree_key_s {
 
 struct tree_data_s {
 	struct tree_key_s key;
-	char unused1[256];
+	char unused1[64];
 	long value;
 };
 
