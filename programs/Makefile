@@ -25,7 +25,8 @@ endif # MYTOOLBOX_CFLAGS_NO_WARNINGS_AS_ERRORS
 
 APPS = test/test_cpu_cycles test/test_list_sort test/test_random test/test_rbtree \
 		test/rbtree_perf_student1/rbtree_perf_student1_test \
-		test/rbtree_perf_student2/rbtree_perf_student2_test
+		test/rbtree_perf_student2/rbtree_perf_student2_test \
+		test/rbtree_perf_superanchor3/rbtree_perf_superanchor3_test
 
 OBJDUMP ?= objdump
 OBJDUMP_OPTS ?= --archive-headers --disassemble --file-headers --line-numbers
@@ -83,6 +84,17 @@ test/rbtree_perf_student2/rbtree_perf_student2_test: test/rbtree_perf_student2/r
 			test/rbtree_perf_student2/rbtree_perf_student2_test.c    $(LDFLAGS) -o $@
 	$(OBJDUMP) $(OBJDUMP_OPTS) $@ > $@.asm.log
 	$(NM) $(NM_OPTS) $@ > $@.nm.log
+
+test/rbtree_perf_superanchor3/rbtree_perf_superanchor3_test: test/rbtree_perf_superanchor3/rbtree_perf_superanchor3.c \
+			test/rbtree_perf_superanchor3/rbtree_perf_superanchor3_test.c \
+			test/rbtree_perf_superanchor3/rbtree_perf_superanchor3.h \
+			../library/libmytoolbox.a
+	@echo "  CC    $<"
+	$(CC) $(CFLAGS) $(OFLAGS) test/rbtree_perf_superanchor3/rbtree_perf_superanchor3.c \
+			test/rbtree_perf_superanchor3/rbtree_perf_superanchor3_test.c    $(LDFLAGS) -o $@
+	$(OBJDUMP) $(OBJDUMP_OPTS) $@ > $@.asm.log
+	$(NM) $(NM_OPTS) $@ > $@.nm.log
+
 
 .PHONY: clean
 
