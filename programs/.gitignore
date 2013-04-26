@@ -21,3 +21,5 @@
 /test/test_random
 /test/test_rbtree
 
+/test/rbtree_perf_student1/rbtree_perf_student1_test
+
