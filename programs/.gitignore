@@ -22,4 +22,5 @@
 /test/test_rbtree
 
 /test/rbtree_perf_student1/rbtree_perf_student1_test
+/test/rbtree_perf_student2/rbtree_perf_student2_test
 
