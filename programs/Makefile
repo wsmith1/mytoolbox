@@ -27,6 +27,8 @@ APPS = test/test_cpu_cycles test/test_list_sort test/test_random test/test_rbtre
 
 OBJDUMP ?= objdump
 OBJDUMP_OPTS ?= --archive-headers --disassemble --file-headers --line-numbers
+NM ?= nm
+NM_OPTS ?= --debug-syms --print-size
 
 .PHONY: all
 
@@ -37,28 +39,32 @@ test/test_cpu_cycles: test/test_cpu_cycles.c ../library/libmytoolbox.a
 	$(CC) $(CFLAGS) $(OFLAGS) test/test_cpu_cycles.c    $(LDFLAGS) -o $@
 	@echo "  OBJDUMP $@ -> $@.asm.log"
 	$(OBJDUMP) $(OBJDUMP_OPTS) $@ > $@.asm.log
+	$(NM) $(NM_OPTS) $@ > $@.nm.log
 
 test/test_list_sort: test/test_list_sort.c ../library/libmytoolbox.a
 	@echo "  CC    $<"
 	$(CC) $(CFLAGS) $(OFLAGS) test/test_list_sort.c    $(LDFLAGS) -o $@
 	@echo "  OBJDUMP $@ -> $@.asm.log"
 	$(OBJDUMP) $(OBJDUMP_OPTS) $@ > $@.asm.log
+	$(NM) $(NM_OPTS) $@ > $@.nm.log
 
 test/test_random: test/test_random.c ../library/libmytoolbox.a
 	@echo "  CC    $<"
 	$(CC) $(CFLAGS) $(OFLAGS) test/test_random.c    $(LDFLAGS) -o $@
 	@echo "  OBJDUMP $@ -> $@.asm.log"
 	$(OBJDUMP) $(OBJDUMP_OPTS) $@ > $@.asm.log
+	$(NM) $(NM_OPTS) $@ > $@.nm.log
 
 test/test_rbtree: test/test_rbtree.c ../library/libmytoolbox.a
 	@echo "  CC    $<"
 	$(CC) $(CFLAGS) $(OFLAGS) test/test_rbtree.c    $(LDFLAGS) -o $@
 	@echo "  OBJDUMP $@ -> $@.asm.log"
 	$(OBJDUMP) $(OBJDUMP_OPTS) $@ > $@.asm.log
+	$(NM) $(NM_OPTS) $@ > $@.nm.log
 
 
 .PHONY: clean
 
 clean:
-	rm -f $(APPS) $(addsuffix .asm.log,$(APPS))
+	rm -f $(APPS) $(addsuffix .asm.log,$(APPS)) $(addsuffix .nm.log,$(APPS))
 

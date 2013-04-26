@@ -18,6 +18,8 @@ OBJS=   list_sort.o list_sort_test.o \
 
 OBJDUMP ?= objdump
 OBJDUMP_OPTS ?= --archive-headers --disassemble --file-headers --line-numbers
+NM ?= nm
+NM_OPTS ?= --debug-syms --print-size
 
 .PHONY: all
 
@@ -42,6 +44,7 @@ libmytoolbox.a: $(OBJS)
 	ranlib $@
 	@echo "  OBJDUMP $@ -> $@.asm.log"
 	$(OBJDUMP) $(OBJDUMP_OPTS) $@ > $@.asm.log
+	$(NM) $(NM_OPTS) $@ > $@.nm.log
 
 libmytoolbox.so: libmytoolbox.a
 	@echo "  LD    $@"
@@ -54,5 +57,5 @@ libmytoolbox.so: libmytoolbox.a
 .PHONY: clean
 
 clean:
-	rm -f *.o libmytoolbox.* *.asm.log
+	rm -f *.o libmytoolbox.* *.asm.log *.nm.log
 
