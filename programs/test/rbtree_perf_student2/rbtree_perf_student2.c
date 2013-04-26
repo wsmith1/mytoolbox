@@ -17,7 +17,7 @@ struct tree_perf_entry_s {
 	struct rb_node rb;
 };
 
-int tree_perf_insert(struct rb_root *root, const void *new_key, void *new_data,
+int tree_perf_insert(struct rb_root *root, long new_k1, long new_k2, void *new_data,
 		tree_perf_compar_f cmp_func)
 {
 	struct tree_perf_entry_s *ent;
@@ -42,7 +42,7 @@ int tree_perf_insert(struct rb_root *root, const void *new_key, void *new_data,
 		parent_entry = rb_entry_qual(parent, struct tree_perf_entry_s, rb, const);
 		parent_data = parent_entry->data;
 
-		cmp_ret = cmp_func(new_key, parent_data);
+		cmp_ret = cmp_func(new_k1, new_k2, parent_data);
 		if (cmp_ret < 0) {
 			_new = &parent->rb_left;
 		}
@@ -66,7 +66,7 @@ int tree_perf_insert(struct rb_root *root, const void *new_key, void *new_data,
 	return 1;
 }
 
-const void *tree_perf_find_at(struct rb_root *root, const void *key,
+const void *tree_perf_find_at(struct rb_root *root, long k1, long k2,
 		tree_perf_compar_f cmp_func)
 {
 	struct rb_node *node;
@@ -83,7 +83,7 @@ const void *tree_perf_find_at(struct rb_root *root, const void *key,
 
 		ent = rb_entry_qual(node, struct tree_perf_entry_s, rb, const);
 		data = ent->data;
-		cmp_ret = cmp_func(key, data);
+		cmp_ret = cmp_func(k1, k2, data);
 
 		if (cmp_ret < 0) {
 			node = node->rb_left;
@@ -107,7 +107,7 @@ const void *tree_perf_find_at(struct rb_root *root, const void *key,
 	return data_found;
 }
 
-void *tree_perf_remove_at(struct rb_root *root, const void *key,
+void *tree_perf_remove_at(struct rb_root *root, long k1, long k2,
 		tree_perf_compar_f cmp_func)
 
 {
@@ -126,7 +126,7 @@ void *tree_perf_remove_at(struct rb_root *root, const void *key,
 
 		ent = rb_entry(node, struct tree_perf_entry_s, rb);
 		data = ent->data;
-		cmp_ret = cmp_func(key, data);
+		cmp_ret = cmp_func(k1, k2, data);
 
 		if (cmp_ret < 0) {
 			node = node->rb_left;

@@ -22,21 +22,20 @@ struct tree_data_s {
 /* Number of nodes over which to collect statistics */
 #define NODE_STAT_COUNT 100000
 
-static int rbtree_perf_compar(const void *key, const void *data)
+static int rbtree_perf_compar(long k1, long k2, const void *data)
 {
-	const struct tree_key_s * const kp = key;
 	const struct tree_data_s *const da = data;
-	if (kp->k1 < da->key.k1) {
+	if (k1 < da->key.k1) {
 		return -1;
 	}
-	else if (kp->k1 > da->key.k1) {
+	else if (k1 > da->key.k1) {
 		return 1;
 	}
 	else {
-		if (kp->k2 < da->key.k2) {
+		if (k2 < da->key.k2) {
 			return -1;
 		}
-		else if (kp->k2 > da->key.k2) {
+		else if (k2 > da->key.k2) {
 			return 1;
 		}
 		else {
@@ -78,7 +77,7 @@ static int rbtree_perf_student2_test(void)
 		int ret;
 		datanode_key = datanodes[i].key;
 
-		ret = tree_perf_insert(&tree_root, &datanode_key,
+		ret = tree_perf_insert(&tree_root, datanode_key.k1, datanode_key.k2,
 			&datanodes[i], rbtree_perf_compar);
 		total_insert_count += ret;
 	}
@@ -87,7 +86,7 @@ static int rbtree_perf_student2_test(void)
 		int ret;
 		datanode_key = datanodes[i].key;
 
-		ret = tree_perf_insert(&tree_root, &datanode_key,
+		ret = tree_perf_insert(&tree_root, datanode_key.k1, datanode_key.k2,
 			&datanodes[i], rbtree_perf_compar);
 		total_insert_count += ret;
 	}
@@ -102,7 +101,7 @@ static int rbtree_perf_student2_test(void)
 		const struct tree_data_s *datanode_found;
 		datanode_key = datanodes[i].key;
 
-		datanode_found = tree_perf_find_at(&tree_root, &datanode_key,
+		datanode_found = tree_perf_find_at(&tree_root, datanode_key.k1, datanode_key.k2,
 			rbtree_perf_compar);
 		if (datanode_found == &datanodes[i]) {
 			total_find_count++;
@@ -113,7 +112,7 @@ static int rbtree_perf_student2_test(void)
 		const struct tree_data_s *datanode_found;
 		datanode_key = datanodes[i].key;
 
-		datanode_found = tree_perf_find_at(&tree_root, &datanode_key,
+		datanode_found = tree_perf_find_at(&tree_root, datanode_key.k1, datanode_key.k2,
 			rbtree_perf_compar);
 		if (datanode_found == &datanodes[i]) {
 			total_find_count++;
@@ -130,7 +129,7 @@ static int rbtree_perf_student2_test(void)
 	for (i = 0; i < NODE_STAT_COUNT; i++) {
 		datanode_key = datanodes[i].key;
 
-		struct tree_data_s *datanode_found = tree_perf_remove_at(&tree_root, &datanode_key,
+		struct tree_data_s *datanode_found = tree_perf_remove_at(&tree_root, datanode_key.k1, datanode_key.k2,
 			rbtree_perf_compar);
 		if (datanode_found == &datanodes[i]) {
 			total_remove_count++;
@@ -141,7 +140,7 @@ static int rbtree_perf_student2_test(void)
 	for (i = NODE_STAT_COUNT; i < NODE_COUNT; i++) {
 		datanode_key = datanodes[i].key;
 
-		struct tree_data_s *datanode_found = tree_perf_remove_at(&tree_root, &datanode_key,
+		struct tree_data_s *datanode_found = tree_perf_remove_at(&tree_root, datanode_key.k1, datanode_key.k2,
 			rbtree_perf_compar);
 		if (datanode_found == &datanodes[i]) {
 			total_remove_count++;
