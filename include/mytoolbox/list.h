@@ -45,9 +45,19 @@ static inline void __list_add(struct list_head *_new,
 	prev->next = _new;
 }
 #else
+
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
 extern void __list_add(struct list_head *_new,
 			      struct list_head *prev,
 			      struct list_head *next);
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
+
 #endif
 
 /**
@@ -109,8 +119,18 @@ static inline void list_del(struct list_head *entry)
 	entry->prev = (struct list_head *)LIST_POISON2;
 }
 #else
+
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
 extern void __list_del_entry(struct list_head *entry);
 extern void list_del(struct list_head *entry);
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
+
 #endif
 
 /**
