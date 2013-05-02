@@ -150,10 +150,22 @@ static inline void rb_init_node(struct rb_node *rb)
 	RB_CLEAR_NODE(rb);
 }
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
 extern void rb_insert_color(struct rb_node *, struct rb_root *);
 extern void rb_erase(struct rb_node *, struct rb_root *);
 
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
+
 typedef void (*rb_augment_f)(struct rb_node *node, void *data);
+
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
 
 extern void rb_augment_insert(struct rb_node *node,
 			      rb_augment_f func, void *data);
@@ -170,6 +182,10 @@ extern struct rb_node *rb_last(const struct rb_root *);
 /* Fast replacement of a single node without remove/rebalance/add/rebalance */
 extern void rb_replace_node(struct rb_node *victim, struct rb_node *_new, 
 			    struct rb_root *root);
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
 static inline void rb_link_node(struct rb_node * node, struct rb_node * parent,
 				struct rb_node ** rb_link)
