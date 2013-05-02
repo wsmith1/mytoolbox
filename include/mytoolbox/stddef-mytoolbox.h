@@ -6,10 +6,12 @@
 /* For __compiler_offsetof() macro definition */
 #include "mytoolbox/compiler.h"
 
+#ifndef __cplusplus
 enum {
 	false	= 0,
 	true	= 1
 };
+#endif /* __cplusplus */
 
 #ifndef offsetof
 #ifdef __compiler_offsetof
