@@ -22,27 +22,27 @@ struct test_node {
 
 static void insert(struct test_node *node, struct rb_root *root)
 {
-	struct rb_node **new = &root->rb_node, *parent = NULL;
+	struct rb_node **_new = &root->rb_node, *parent = NULL;
 	uint32_t key = node->key;
 
-	while (*new) {
+	while (*_new) {
 		uint32_t parent_key;
-		parent = *new;
+		parent = *_new;
 		parent_key = rb_entry(parent, struct test_node, rb)->key;
 		if (key < parent_key) {
-			new = &parent->rb_left;
+			_new = &parent->rb_left;
 		}
 		else if (key > parent_key) {
-			new = &parent->rb_right;
+			_new = &parent->rb_right;
 		}
 		else {
 			/* have to do it for now, FIXME later */
-			new = &parent->rb_right;
+			_new = &parent->rb_right;
 			WARN_ONCE(1, "duplicate key %lu\n", (unsigned long)key);
 		}
 	}
 
-	rb_link_node(&node->rb, parent, new);
+	rb_link_node(&node->rb, parent, _new);
 	rb_insert_color(&node->rb, root);
 }
 
@@ -78,30 +78,30 @@ static void augment_callback(struct rb_node *node, void *data)
 
 static void insert_augmented(struct test_node *node, struct rb_root *root)
 {
-	struct rb_node **new = &root->rb_node, *rb_parent = NULL;
+	struct rb_node **_new = &root->rb_node, *rb_parent = NULL;
 	uint32_t key = node->key;
 	uint32_t val = node->val;
 	struct test_node *parent;
 
-	while (*new) {
-		rb_parent = *new;
+	while (*_new) {
+		rb_parent = *_new;
 		parent = rb_entry(rb_parent, struct test_node, rb);
 		if (parent->augmented < val)
 			parent->augmented = val;
 		if (key < parent->key) {
-			new = &parent->rb.rb_left;
+			_new = &parent->rb.rb_left;
 		}
 		else if (key > parent->key) {
-			new = &parent->rb.rb_right;
+			_new = &parent->rb.rb_right;
 		}
 		else {
-			new = &parent->rb.rb_right;
+			_new = &parent->rb.rb_right;
 			WARN_ONCE(1, "duplicate key %lu\n", (unsigned long)key);
 		}
 	}
 
 	node->augmented = val;
-	rb_link_node(&node->rb, rb_parent, new);
+	rb_link_node(&node->rb, rb_parent, _new);
 	rb_insert_color(&node->rb, root);
 	rb_augment_insert(&node->rb, augment_callback, NULL);
 }
