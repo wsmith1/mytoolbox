@@ -13,6 +13,10 @@ struct rnd_state {
 	uint32_t s1, s2, s3;
 };
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
 /**
  *	prandom32_s - seeded pseudo-random number generator.
  *	@state: pointer to state structure holding seeded state.
@@ -36,5 +40,9 @@ void srandom32_s(struct rnd_state *, uint32_t);
  *	to start the random32() engine.
  */
 void random32_init_s(struct rnd_state *, uint32_t);
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
 #endif /* _MYTOOLBOX_RANDOM_H */
