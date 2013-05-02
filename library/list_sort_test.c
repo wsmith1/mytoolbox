@@ -93,7 +93,7 @@ int list_sort_test(void)
 	random32_init_s(&state, 100500);
 	fprintf(stderr, "list_sort_test: start testing list_sort()\n");
 
-	elts = list_sort_test_malloc(sizeof(void *) * TEST_LIST_LEN);
+	elts = (struct debug_el **)list_sort_test_malloc(sizeof(void *) * TEST_LIST_LEN);
 	if (!elts) {
 		fprintf(stderr, "list_sort_test: error: cannot allocate "
 				"memory\n");
@@ -101,7 +101,7 @@ int list_sort_test(void)
 	}
 
 	for (i = 0; i < TEST_LIST_LEN; i++) {
-		el = list_sort_test_malloc(sizeof(*el));
+		el = (struct debug_el *)list_sort_test_malloc(sizeof(*el));
 		if (!el) {
 			fprintf(stderr, "list_sort_test: error: cannot "
 					"allocate memory\n");
